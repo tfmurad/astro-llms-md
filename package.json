@@ -1,0 +1,59 @@
+{
+  "name": "astro-llms-md",
+  "version": "1.0.0",
+  "description": "Astro integration to generate llms.txt, llms-full.txt, and markdown files from your Astro site",
+  "type": "module",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./src/index.js",
+      "types": "./src/index.d.ts"
+    }
+  },
+  "files": [
+    "src/",
+    "README.md",
+    "CONTRIBUTING.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "astro-integration",
+    "withastro",
+    "astro",
+    "llms-txt",
+    "llms",
+    "ai",
+    "markdown",
+    "static-site",
+    "seo",
+    "performance"
+  ],
+  "author": "Al Murad Uzzaman",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tfmurad/astro-llms-md.git"
+  },
+  "homepage": "https://github.com/tfmurad/astro-llms-md#readme",
+  "bugs": {
+    "url": "https://github.com/tfmurad/astro-llms-md/issues"
+  },
+  "peerDependencies": {
+    "astro": "^4.0.0 || ^5.0.0 || ^6.0.0"
+  },
+  "dependencies": {
+    "glob": "^13.0.6",
+    "node-html-parser": "^7.1.0",
+    "turndown": "^7.2.4"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
