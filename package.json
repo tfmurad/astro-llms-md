@@ -1,6 +1,6 @@
 {
   "name": "astro-llms-md",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Astro integration to generate llms.txt, llms-full.txt, and markdown files from your Astro site",
   "type": "module",
   "main": "./src/index.js",
@@ -21,6 +21,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
+    "astro-component",
     "astro-integration",
     "withastro",
     "astro",
