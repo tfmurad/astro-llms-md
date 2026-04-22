@@ -3,6 +3,8 @@
 [![npm version](https://badge.fury.io/js/astro-llms-md.svg)](https://www.npmjs.com/package/astro-llms-md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+Listed on Astro Integrations: [astro-llms-md on astro.build](https://astro.build/integrations/?search=astro-llms-md)
+
 An **Astro integration** to generate `llms.txt`, `llms-full.txt`, and markdown files from your Astro site.
 
 ## What is llms.txt?
@@ -17,7 +19,6 @@ The `llms.txt` standard helps language models discover and understand your websi
 
 - ✅ **Astro Integration** - Seamless integration with Astro build process
 - ✅ **Zero-config** - Works out of the box with sensible defaults
-- ✅ **Auto-setup** - Automatically creates `llms.json` config on install
 - ✅ **Smart detection** - Auto-detects Astro site URL from config
 - ✅ **TypeScript support** - Full TypeScript type definitions
 - ✅ **Smart cleanup** - Removes disabled file types automatically
@@ -45,22 +46,7 @@ export default defineConfig({
 });
 ```
 
-### 3. Create Config File (Optional)
-
-Create `llms.json` in your project root for customization:
-
-```json
-{
-  "site_url": "https://your-site.com",
-  "name": "Your Site Name",
-  "description": "Your site description",
-  "generate_individual_md": true,
-  "generate_llms_txt": true,
-  "generate_llms_full_txt": true
-}
-```
-
-### 4. Build
+### 3. Build
 
 ```bash
 npm run build
@@ -79,7 +65,6 @@ export default defineConfig({
   site: "https://your-site.com",
   integrations: [
     llms({
-      // Override llms.json settings
       siteUrl: "https://your-site.com",
       name: "My Site",
       description: "A great website",
@@ -90,45 +75,27 @@ export default defineConfig({
       contentSelector: "main",
       exclude: ["404", "404.html", "_astro"],
       verbose: false,
-      autoCreateConfig: true,
     }),
   ],
 });
 ```
 
-## Configuration File (llms.json)
+## Configuration Options
 
-Place `llms.json` in your project root:
+All configuration is defined in `astro.config.mjs` via `llms({...})`. The integration also uses Astro's top-level `site` value when `siteUrl` is not provided.
 
-```json
-{
-  "site_url": "https://your-site.com",
-  "name": "Your Site Name",
-  "description": "Your site description",
-  "generate_individual_md": true,
-  "generate_llms_txt": true,
-  "generate_llms_full_txt": true,
-  "title_selector": "h1",
-  "content_selector": "main",
-  "exclude": ["404", "404.html", "_astro", "**.xml", "**.txt"],
-  "verbose": false
-}
-```
-
-### Configuration Options
-
-| Option                   | Type    | Default   | Description                    |
-| ------------------------ | ------- | --------- | ------------------------------ |
-| `site_url`               | string  | required  | Your site's base URL           |
-| `name`                   | string  | auto      | Site name for llms.txt heading |
-| `description`            | string  | auto      | Site description               |
-| `generate_individual_md` | boolean | `true`    | Generate individual .md files  |
-| `generate_llms_txt`      | boolean | `true`    | Generate llms.txt index        |
-| `generate_llms_full_txt` | boolean | `true`    | Generate llms-full.txt         |
-| `title_selector`         | string  | `"h1"`    | CSS selector for page title    |
-| `content_selector`       | string  | `"main"`  | CSS selector for main content  |
-| `exclude`                | array   | see below | Patterns to exclude            |
-| `verbose`                | boolean | `false`   | Detailed output                |
+| Option                 | Type    | Default       | Description                    |
+| ---------------------- | ------- | ------------- | ------------------------------ |
+| `siteUrl`              | string  | `config.site` | Your site's base URL           |
+| `name`                 | string  | auto          | Site name for llms.txt heading |
+| `description`          | string  | auto          | Site description               |
+| `generateIndividualMd` | boolean | `true`        | Generate individual .md files  |
+| `generateLlmsTxt`      | boolean | `true`        | Generate llms.txt index        |
+| `generateLlmsFullTxt`  | boolean | `true`        | Generate llms-full.txt         |
+| `titleSelector`        | string  | `"h1"`        | CSS selector for page title    |
+| `contentSelector`      | string  | `"main"`      | CSS selector for main content  |
+| `exclude`              | array   | see below     | Patterns to exclude            |
+| `verbose`              | boolean | `false`       | Detailed output                |
 
 ### Default Excludes
 
@@ -195,20 +162,19 @@ Content converted from HTML to Markdown...
 
 ## Troubleshooting
 
-### "No site_url specified"
+### "No site URL specified"
 
 Make sure to either:
 
 - Set `site` in `astro.config.mjs`
-- Add `site_url` to `llms.json`
 - Pass `siteUrl` to the integration options
 
 ### Pages not showing up
 
 Check that your pages have:
 
-1. An `<h1>` tag (or configure `title_selector`)
-2. A `<main>` element (or configure `content_selector`)
+1. An `<h1>` tag (or configure `titleSelector`)
+2. A `<main>` element (or configure `contentSelector`)
 3. Valid HTML structure
 
 ## License

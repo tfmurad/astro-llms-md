@@ -32,6 +32,7 @@ This project and everyone participating in it is governed by our commitment to:
 
 1. Fork the repository on GitHub
 2. Clone your fork locally:
+
    ```bash
    git clone https://github.com/YOUR_USERNAME/astro-llms-md.git
    cd astro-llms-md
@@ -45,11 +46,13 @@ This project and everyone participating in it is governed by our commitment to:
 ## Development Setup
 
 1. **Install dependencies:**
+
    ```bash
    npm install
    ```
 
 2. **Create a test Astro project:**
+
    ```bash
    # In a separate directory
    npm create astro@latest test-project
@@ -58,33 +61,26 @@ This project and everyone participating in it is governed by our commitment to:
    ```
 
 3. **Link the integration for local development:**
+
    ```bash
    # In your test project
    npm link /path/to/astro-llms-md
    ```
 
 4. **Add the integration to test project:**
+
    ```javascript
    // astro.config.mjs
-   import { defineConfig } from 'astro/config';
-   import llms from 'astro-llms-md';
+   import { defineConfig } from "astro/config";
+   import llms from "astro-llms-md";
 
    export default defineConfig({
-     site: 'https://example.com',
-     integrations: [llms({ verbose: true })]
+     site: "https://example.com",
+     integrations: [llms({ verbose: true })],
    });
    ```
 
-5. **Create llms.json:**
-   ```json
-   {
-     "site_url": "https://example.com",
-     "name": "Test Site",
-     "description": "Testing astro-llms-md integration"
-   }
-   ```
-
-6. **Run the build to test:**
+5. **Run the build to test:**
    ```bash
    npm run build
    ```
@@ -116,6 +112,7 @@ Feature suggestions are welcome! Please:
 ### Pull Requests
 
 1. **Create a branch:**
+
    ```bash
    git checkout -b feature/your-feature-name
    # or
@@ -134,6 +131,7 @@ Feature suggestions are welcome! Please:
    - Ensure TypeScript types are correct
 
 4. **Commit your changes:**
+
    ```bash
    git add .
    git commit -m "type: description"
@@ -148,6 +146,7 @@ Feature suggestions are welcome! Please:
    - `chore: maintenance tasks`
 
 5. **Push to your fork:**
+
    ```bash
    git push origin feature/your-feature-name
    ```
@@ -162,8 +161,8 @@ Feature suggestions are welcome! Please:
 ```
 astro-llms-md/
 ├── src/
-│   ├── index.js       # Main integration and generator
-│   └── index.d.ts     # TypeScript definitions
+│   ├── index.ts       # Main integration and generator
+├── dist/              # Build output (generated)
 ├── package.json       # Package configuration
 ├── README.md          # Documentation
 ├── CONTRIBUTING.md    # This file
@@ -182,9 +181,9 @@ astro-llms-md/
 
 ### TypeScript
 
-- Update `index.d.ts` when adding new options or changing interfaces
+- Update exported interfaces in `src/index.ts` when adding new options or changing interfaces
 - Ensure types are accurate and descriptive
-- Test types with a TypeScript project
+- Run `npm run typecheck` and `npm run build` before opening a PR
 
 ### Testing
 
@@ -197,6 +196,7 @@ Currently, we test manually with sample Astro projects. To test:
 5. Verify output files are generated correctly
 
 Example test project structure:
+
 ```
 test-project/
 ├── src/
@@ -207,7 +207,6 @@ test-project/
 │           ├── post-1.md
 │           └── post-2.md
 ├── astro.config.mjs
-├── llms.json
 └── package.json
 ```
 
@@ -225,18 +224,22 @@ test-project/
 
 ```markdown
 ## Description
+
 Brief description of changes
 
 ## Type of Change
+
 - [ ] Bug fix
 - [ ] New feature
 - [ ] Breaking change
 - [ ] Documentation update
 
 ## Testing
+
 Describe how you tested the changes
 
 ## Checklist
+
 - [ ] Code follows style guidelines
 - [ ] Self-review completed
 - [ ] Documentation updated
