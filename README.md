@@ -74,6 +74,7 @@ export default defineConfig({
       titleSelector: "h1",
       contentSelector: "main",
       exclude: ["404", "404.html", "_astro"],
+      excludeSelectors: ["aside", "form", "[data-llms-ignore]"],
       verbose: false,
     }),
   ],
@@ -94,7 +95,8 @@ All configuration is defined in `astro.config.mjs` via `llms({...})`. The integr
 | `generateLlmsFullTxt`  | boolean | `true`        | Generate llms-full.txt         |
 | `titleSelector`        | string  | `"h1"`        | CSS selector for page title    |
 | `contentSelector`      | string  | `"main"`      | CSS selector for main content  |
-| `exclude`              | array   | see below     | Patterns to exclude            |
+| `exclude`              | array   | see below     | File path patterns to exclude  |
+| `excludeSelectors`     | array   | `[]`          | CSS selectors to strip from content before HTML → MD conversion (see below) |
 | `verbose`              | boolean | `false`       | Detailed output                |
 
 ### Default Excludes
@@ -102,6 +104,68 @@ All configuration is defined in `astro.config.mjs` via `llms({...})`. The integr
 ```json
 ["404", "404.html", "_astro", "**.xml", "**.txt", "node_modules"]
 ```
+
+### Excluding noise from generated markdown
+
+By default, the integration converts everything inside your
+`contentSelector` (e.g. `<main>`) into markdown. On real sites that
+often includes sidebars, sign-up forms, navigation rails — all noise
+when the audience is an LLM.
+
+`excludeSelectors` is a list of CSS selectors that get **removed from
+the parsed content before** the HTML → Markdown conversion runs:
+
+```js
+import llms from "astro-llms-md";
+
+llms({
+  excludeSelectors: ["aside", "form", "[data-llms-ignore]"],
+});
+```
+
+#### Always stripped (non-overridable)
+
+Three selectors are always applied regardless of config:
+
+| Selector              | Why                                              |
+| --------------------- | ------------------------------------------------ |
+| `script`              | JS — never useful in markdown                    |
+| `style`               | CSS — same                                       |
+| `[data-llms-ignore]`  | Opt-in attribute for ad-hoc markup-side exclusion |
+
+The `[data-llms-ignore]` attribute is the lightweight escape hatch
+when you don't want to touch your integration config:
+
+```astro
+<aside data-llms-ignore>
+  <!-- form, ads, sign-up box, whatever — won't appear in the .md output -->
+</aside>
+```
+
+#### Opt-in default noise list
+
+If you want the common "strip the obvious noise" preset, spread the
+exported `DEFAULT_NOISE_SELECTORS` constant:
+
+```js
+import llms, { DEFAULT_NOISE_SELECTORS } from "astro-llms-md";
+
+llms({
+  excludeSelectors: [
+    ...DEFAULT_NOISE_SELECTORS,
+    ".my-custom-noise-class",
+  ],
+});
+```
+
+`DEFAULT_NOISE_SELECTORS` resolves to:
+
+```js
+["nav", "aside", "footer", "form", "[aria-hidden='true']", "[hidden]"]
+```
+
+It is **not** applied by default — opt-in only, so upgrading to this
+release won't change existing markdown output unless you ask for it.
 
 ## Output Files
 

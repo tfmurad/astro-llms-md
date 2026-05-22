@@ -15,6 +15,32 @@ export interface LlmsIntegrationOptions {
   titleSelector?: string;
   contentSelector?: string;
   exclude?: string[];
+  /**
+   * CSS selectors to remove from each page's content BEFORE the
+   * HTML → Markdown conversion. Useful for stripping sidebars,
+   * navigation, forms, or any element that adds noise to the
+   * generated markdown output.
+   *
+   * `script`, `style`, and `[data-llms-ignore]` are always stripped
+   * regardless of this option — `[data-llms-ignore]` is an opt-in
+   * attribute escape hatch so template authors can mark individual
+   * elements without touching the integration config.
+   *
+   * Defaults to `[]` (only the always-stripped trio applies). To
+   * filter common noise patterns, spread the exported constant:
+   *
+   * ```js
+   * import llms, { DEFAULT_NOISE_SELECTORS } from "astro-llms-md";
+   *
+   * llms({
+   *   excludeSelectors: [
+   *     ...DEFAULT_NOISE_SELECTORS,
+   *     ".my-custom-class",
+   *   ],
+   * });
+   * ```
+   */
+  excludeSelectors?: string[];
   verbose?: boolean;
 }
 
@@ -30,6 +56,7 @@ export interface LlmsConfig {
   titleSelector?: string;
   contentSelector?: string;
   exclude?: string[];
+  excludeSelectors?: string[];
   verbose?: boolean;
 }
 
@@ -50,6 +77,7 @@ interface FormatterConfig {
 interface ProcessOptions {
   titleSelector: string;
   contentSelector: string;
+  excludeSelectors: string[];
 }
 
 interface ResolvedIntegrationConfig {
@@ -62,8 +90,54 @@ interface ResolvedIntegrationConfig {
   titleSelector: string;
   contentSelector: string;
   exclude: string[];
+  excludeSelectors: string[];
   verbose: boolean;
 }
+
+/**
+ * Selectors that are always stripped from page content before HTML→MD
+ * conversion. `script` and `style` are JS/CSS — never useful in
+ * Markdown. `[data-llms-ignore]` is an opt-in attribute escape hatch
+ * so template authors can mark individual elements as "skip me" without
+ * needing to coordinate with the integration config.
+ *
+ * Not user-configurable. To strip more elements, pass `excludeSelectors`
+ * (additive — combined with this list at process time).
+ */
+export const BUILT_IN_EXCLUDE_SELECTORS: readonly string[] = [
+  "script",
+  "style",
+  "[data-llms-ignore]",
+];
+
+/**
+ * Opinionated list of common "noise" selectors that most sites want
+ * stripped from their AI-readable markdown — sidebars, navigation,
+ * forms, hidden content, etc. Exported as a convenience so users can
+ * opt in by spreading into their own `excludeSelectors`:
+ *
+ * ```js
+ * import llms, { DEFAULT_NOISE_SELECTORS } from "astro-llms-md";
+ *
+ * llms({
+ *   excludeSelectors: [
+ *     ...DEFAULT_NOISE_SELECTORS,
+ *     ".my-custom-class",
+ *   ],
+ * });
+ * ```
+ *
+ * Not applied by default — opt-in only, so existing users see no
+ * behavior change.
+ */
+export const DEFAULT_NOISE_SELECTORS: readonly string[] = [
+  "nav",
+  "aside",
+  "footer",
+  "form",
+  "[aria-hidden='true']",
+  "[hidden]",
+];
 
 /**
  * Default configuration
@@ -78,6 +152,7 @@ const defaultConfig: ResolvedIntegrationConfig = {
   titleSelector: "h1",
   contentSelector: "main",
   exclude: ["404", "404.html", "_astro", "**.xml", "**.txt", "node_modules"],
+  excludeSelectors: [],
   verbose: false,
 };
 
@@ -128,7 +203,7 @@ async function processHtmlFile(
   filePath: string,
   options: ProcessOptions,
 ): Promise<Omit<PageData, "urlPath" | "filePath">> {
-  const { titleSelector, contentSelector } = options;
+  const { titleSelector, contentSelector, excludeSelectors } = options;
 
   const html = await readFile(filePath, "utf8");
   const root = parse(html);
@@ -146,10 +221,16 @@ async function processHtmlFile(
   let content = "";
 
   if (contentElement) {
-    // Remove script and style tags
-    contentElement
-      .querySelectorAll("script, style")
-      .forEach((el) => el.remove());
+    // Strip noise elements before conversion. BUILT_IN_EXCLUDE_SELECTORS
+    // is always applied (script/style/[data-llms-ignore]); user-supplied
+    // selectors extend it. De-duped so explicit overlaps don't cost a
+    // second pass.
+    const selectors = Array.from(
+      new Set([...BUILT_IN_EXCLUDE_SELECTORS, ...excludeSelectors]),
+    ).join(", ");
+    if (selectors) {
+      contentElement.querySelectorAll(selectors).forEach((el) => el.remove());
+    }
 
     // Convert HTML to markdown
     const turndownService = new TurndownService({
@@ -289,6 +370,7 @@ export async function generateLlmsFiles(config: LlmsConfig): Promise<void> {
     titleSelector = "h1",
     contentSelector = "main",
     exclude = defaultConfig.exclude,
+    excludeSelectors = defaultConfig.excludeSelectors,
     verbose = false,
   } = config;
 
@@ -320,6 +402,7 @@ export async function generateLlmsFiles(config: LlmsConfig): Promise<void> {
       const pageData = await processHtmlFile(file, {
         titleSelector,
         contentSelector,
+        excludeSelectors,
       });
 
       if (!pageData.title) {
@@ -493,6 +576,7 @@ export default function llmsIntegration(options: LlmsIntegrationOptions = {}) {
             titleSelector: mergedOptions.titleSelector,
             contentSelector: mergedOptions.contentSelector,
             exclude: mergedOptions.exclude,
+            excludeSelectors: mergedOptions.excludeSelectors,
             verbose: mergedOptions.verbose,
           };
 
