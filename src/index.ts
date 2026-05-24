@@ -15,31 +15,6 @@ export interface LlmsIntegrationOptions {
   titleSelector?: string;
   contentSelector?: string;
   exclude?: string[];
-  /**
-   * CSS selectors to remove from each page's content BEFORE the
-   * HTML → Markdown conversion. Useful for stripping sidebars,
-   * navigation, forms, or any element that adds noise to the
-   * generated markdown output.
-   *
-   * `script`, `style`, and `[data-llms-ignore]` are always stripped
-   * regardless of this option — `[data-llms-ignore]` is an opt-in
-   * attribute escape hatch so template authors can mark individual
-   * elements without touching the integration config.
-   *
-   * Defaults to `[]` (only the always-stripped trio applies). To
-   * filter common noise patterns, spread the exported constant:
-   *
-   * ```js
-   * import llms, { DEFAULT_NOISE_SELECTORS } from "astro-llms-md";
-   *
-   * llms({
-   *   excludeSelectors: [
-   *     ...DEFAULT_NOISE_SELECTORS,
-   *     ".my-custom-class",
-   *   ],
-   * });
-   * ```
-   */
   excludeSelectors?: string[];
   verbose?: boolean;
 }
@@ -94,42 +69,12 @@ interface ResolvedIntegrationConfig {
   verbose: boolean;
 }
 
-/**
- * Selectors that are always stripped from page content before HTML→MD
- * conversion. `script` and `style` are JS/CSS — never useful in
- * Markdown. `[data-llms-ignore]` is an opt-in attribute escape hatch
- * so template authors can mark individual elements as "skip me" without
- * needing to coordinate with the integration config.
- *
- * Not user-configurable. To strip more elements, pass `excludeSelectors`
- * (additive — combined with this list at process time).
- */
 export const BUILT_IN_EXCLUDE_SELECTORS: readonly string[] = [
   "script",
   "style",
   "[data-llms-ignore]",
 ];
 
-/**
- * Opinionated list of common "noise" selectors that most sites want
- * stripped from their AI-readable markdown — sidebars, navigation,
- * forms, hidden content, etc. Exported as a convenience so users can
- * opt in by spreading into their own `excludeSelectors`:
- *
- * ```js
- * import llms, { DEFAULT_NOISE_SELECTORS } from "astro-llms-md";
- *
- * llms({
- *   excludeSelectors: [
- *     ...DEFAULT_NOISE_SELECTORS,
- *     ".my-custom-class",
- *   ],
- * });
- * ```
- *
- * Not applied by default — opt-in only, so existing users see no
- * behavior change.
- */
 export const DEFAULT_NOISE_SELECTORS: readonly string[] = [
   "nav",
   "aside",
