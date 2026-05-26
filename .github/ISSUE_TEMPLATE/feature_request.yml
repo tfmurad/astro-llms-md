@@ -1,0 +1,58 @@
+name: Feature request
+description: Suggest a new option, behavior, or improvement.
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting an idea! Before submitting, please:
+        - Search [existing issues](https://github.com/tfmurad/astro-llms-md/issues?q=is%3Aissue) to avoid duplicates.
+        - Skim the [README](https://github.com/tfmurad/astro-llms-md#readme) — the feature might already exist.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the use case you're trying to address. Real-world context helps a lot.
+      placeholder: I'm building a docs site where the sidebar emits a sign-up form on every page, and it ends up in the generated `.md` siblings as noise.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What would the API or behavior look like? Pseudo-code is welcome.
+      placeholder: |
+        A new option `excludeSelectors: string[]` that gets stripped from the HTML before MD conversion.
+        ```js
+        llms({ excludeSelectors: ["aside", "form"] })
+        ```
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any workarounds you've tried, or other approaches you weighed?
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Scope
+      description: Roughly, how big is this?
+      options:
+        - "Tiny — option/flag tweak"
+        - "Moderate — new option or behavior"
+        - "Large — new generator / output / architectural change"
+        - "Not sure"
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Anything else?
+      description: Links to related issues, similar features in other tools, prior art, etc.

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Contribution guide
+    url: https://github.com/tfmurad/astro-llms-md/blob/main/CONTRIBUTING.md
+    about: How to set up the project locally, submit PRs, and follow the commit conventions.
+  - name: Astro Discord
+    url: https://astro.build/chat
+    about: For general Astro questions that aren't specific to this integration.

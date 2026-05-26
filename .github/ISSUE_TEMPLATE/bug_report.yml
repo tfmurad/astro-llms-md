@@ -1,0 +1,133 @@
+name: Bug report
+description: File a bug report to help us improve astro-llms-md.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug report! Please fill out the
+        sections below so we can reproduce and fix the issue quickly.
+
+        Before submitting:
+        - Make sure you're on the latest version of `astro-llms-md`.
+        - Search [existing issues](https://github.com/tfmurad/astro-llms-md/issues?q=is%3Aissue) to avoid duplicates.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: A clear and concise description of what the bug is.
+      placeholder: When I run `astro build` with X enabled, the generated `llms.txt` does Y instead of Z.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Minimum steps someone else can follow to see the same behavior.
+      placeholder: |
+        1. Run `npm create astro@latest -- --template starlight`
+        2. Add `astro-llms-md` to integrations with `llms({ ... })`
+        3. Run `astro build`
+        4. Open `dist/llms.txt`
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What actually happened? Include error messages and stack traces if any.
+      render: shell
+    validations:
+      required: true
+
+  - type: input
+    id: integration-version
+    attributes:
+      label: astro-llms-md version
+      placeholder: e.g. 2.1.0
+    validations:
+      required: true
+
+  - type: input
+    id: astro-version
+    attributes:
+      label: Astro version
+      placeholder: e.g. 5.0.0
+    validations:
+      required: true
+
+  - type: input
+    id: node-version
+    attributes:
+      label: Node.js version
+      placeholder: e.g. 20.11.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: output-mode
+    attributes:
+      label: Astro `output` mode
+      options:
+        - "static (default)"
+        - "server (SSR)"
+        - "hybrid"
+        - "not sure"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: build-format
+    attributes:
+      label: Astro `build.format`
+      options:
+        - "directory (default)"
+        - "file"
+        - "preserve"
+        - "not sure"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: how-reproduced
+    attributes:
+      label: How are you running / hitting the integration?
+      description: This matters — the integration only runs at build time, not in `astro dev`.
+      options:
+        - "astro dev (dev server)"
+        - "astro preview after astro build"
+        - "Deployed site (Cloudflare / Netlify / Vercel / other)"
+        - "Other / multiple"
+    validations:
+      required: true
+
+  - type: textarea
+    id: config
+    attributes:
+      label: Relevant integration config
+      description: Paste the `llms({ ... })` call from your `astro.config.mjs`.
+      render: javascript
+      placeholder: |
+        llms({
+          generateLlmsTxt: true,
+          excludeSelectors: ["aside", "form"],
+          // ...
+        })
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Anything else?
+      description: Screenshots, deployment platform, related issues, etc.
