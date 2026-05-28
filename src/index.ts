@@ -5,6 +5,10 @@ import { dirname, join, resolve } from "path";
 import TurndownService from "turndown";
 import { fileURLToPath } from "url";
 
+export type TrailingSlashMode = "always" | "never" | "ignore";
+
+type BuildFormat = "directory" | "file" | "preserve";
+
 export interface LlmsIntegrationOptions {
   siteUrl?: string;
   name?: string;
@@ -16,6 +20,7 @@ export interface LlmsIntegrationOptions {
   contentSelector?: string;
   exclude?: string[];
   excludeSelectors?: string[];
+  trailingSlash?: TrailingSlashMode;
   verbose?: boolean;
 }
 
@@ -32,6 +37,8 @@ export interface LlmsConfig {
   contentSelector?: string;
   exclude?: string[];
   excludeSelectors?: string[];
+  trailingSlash?: TrailingSlashMode;
+  buildFormat?: BuildFormat;
   verbose?: boolean;
 }
 
@@ -47,6 +54,8 @@ interface FormatterConfig {
   name: string;
   description: string;
   siteUrl: string;
+  trailingSlash: TrailingSlashMode;
+  buildFormat: BuildFormat;
 }
 
 interface ProcessOptions {
@@ -66,6 +75,8 @@ interface ResolvedIntegrationConfig {
   contentSelector: string;
   exclude: string[];
   excludeSelectors: string[];
+  trailingSlash: TrailingSlashMode;
+  buildFormat: BuildFormat;
   verbose: boolean;
 }
 
@@ -98,8 +109,30 @@ const defaultConfig: ResolvedIntegrationConfig = {
   contentSelector: "main",
   exclude: ["404", "404.html", "_astro", "**.xml", "**.txt", "node_modules"],
   excludeSelectors: [],
+  trailingSlash: "ignore",
+  buildFormat: "directory",
   verbose: false,
 };
+
+function resolveTrailingSlash(
+  mode: TrailingSlashMode,
+  buildFormat: BuildFormat,
+): "always" | "never" {
+  if (mode === "always" || mode === "never") return mode;
+  return buildFormat === "file" ? "never" : "always";
+}
+
+function applyTrailingSlash(
+  url: string,
+  mode: TrailingSlashMode,
+  buildFormat: BuildFormat,
+): string {
+  const resolved = resolveTrailingSlash(mode, buildFormat);
+  if (resolved === "always") {
+    return url.endsWith("/") ? url : `${url}/`;
+  }
+  return url.replace(/\/+$/, "");
+}
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error) {
@@ -197,8 +230,12 @@ async function processHtmlFile(
  * Generate markdown file content for a page
  */
 function generateMarkdownFile(page: PageData, config: FormatterConfig): string {
-  const { siteUrl } = config;
-  const url = `${siteUrl}${page.urlPath}`.replace(/\/$/, "");
+  const { siteUrl, trailingSlash, buildFormat } = config;
+  const url = applyTrailingSlash(
+    `${siteUrl}${page.urlPath}`,
+    trailingSlash,
+    buildFormat,
+  );
 
   let md = "---\n";
   md += `title: "${page.title}"\n`;
@@ -275,13 +312,17 @@ function generateLlmsFullTxtContent(
   pages: PageData[],
   config: FormatterConfig,
 ): string {
-  const { name, siteUrl } = config;
+  const { name, siteUrl, trailingSlash, buildFormat } = config;
 
   let content = `# ${name}\n\n`;
-  content += `URL: ${siteUrl}\n\n`;
+  content += `URL: ${applyTrailingSlash(siteUrl, trailingSlash, buildFormat)}\n\n`;
 
   pages.forEach((page, index) => {
-    const url = `${siteUrl}${page.urlPath}`.replace(/\/$/, "");
+    const url = applyTrailingSlash(
+      `${siteUrl}${page.urlPath}`,
+      trailingSlash,
+      buildFormat,
+    );
     content += `## ${page.title}\n\n`;
     content += `URL: ${url}\n\n`;
 
@@ -316,6 +357,8 @@ export async function generateLlmsFiles(config: LlmsConfig): Promise<void> {
     contentSelector = "main",
     exclude = defaultConfig.exclude,
     excludeSelectors = defaultConfig.excludeSelectors,
+    trailingSlash = defaultConfig.trailingSlash,
+    buildFormat = defaultConfig.buildFormat,
     verbose = false,
   } = config;
 
@@ -384,6 +427,8 @@ export async function generateLlmsFiles(config: LlmsConfig): Promise<void> {
     name: siteName,
     description: siteDescription,
     siteUrl: siteUrl.replace(/\/$/, ""),
+    trailingSlash,
+    buildFormat,
   };
 
   // Generate individual .md files
@@ -473,6 +518,8 @@ export async function generateLlmsFiles(config: LlmsConfig): Promise<void> {
  */
 export default function llmsIntegration(options: LlmsIntegrationOptions = {}) {
   let astroSiteUrl = "";
+  let astroTrailingSlash: TrailingSlashMode | undefined;
+  let astroBuildFormat: BuildFormat | undefined;
 
   return {
     name: "astro-llms-md",
@@ -481,12 +528,18 @@ export default function llmsIntegration(options: LlmsIntegrationOptions = {}) {
         config,
         logger,
       }: {
-        config: { site?: URL | string };
+        config: {
+          site?: URL | string;
+          trailingSlash?: TrailingSlashMode;
+          build?: { format?: BuildFormat };
+        };
         logger: { info: (message: string) => void };
       }) => {
         logger.info("Setting up astro-llms-md integration...");
 
         astroSiteUrl = config.site?.toString?.() || "";
+        astroTrailingSlash = config.trailingSlash;
+        astroBuildFormat = config.build?.format;
       },
 
       "astro:build:done": async ({
@@ -506,6 +559,8 @@ export default function llmsIntegration(options: LlmsIntegrationOptions = {}) {
           const distDir = fileURLToPath(dir);
           const mergedOptions: ResolvedIntegrationConfig = {
             ...defaultConfig,
+            trailingSlash: astroTrailingSlash ?? defaultConfig.trailingSlash,
+            buildFormat: astroBuildFormat ?? defaultConfig.buildFormat,
             ...options,
           };
 
@@ -522,6 +577,8 @@ export default function llmsIntegration(options: LlmsIntegrationOptions = {}) {
             contentSelector: mergedOptions.contentSelector,
             exclude: mergedOptions.exclude,
             excludeSelectors: mergedOptions.excludeSelectors,
+            trailingSlash: mergedOptions.trailingSlash,
+            buildFormat: mergedOptions.buildFormat,
             verbose: mergedOptions.verbose,
           };
 

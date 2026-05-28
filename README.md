@@ -1,6 +1,6 @@
 # astro-llms-md
 
-[![npm version](https://badge.fury.io/js/astro-llms-md.svg)](https://www.npmjs.com/package/astro-llms-md)
+[![npm version](https://img.shields.io/npm/v/astro-llms-md.svg)](https://www.npmjs.com/package/astro-llms-md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Listed on Astro Integrations: [astro-llms-md on astro.build](https://astro.build/integrations/?search=astro-llms-md)
@@ -75,6 +75,7 @@ export default defineConfig({
       contentSelector: "main",
       exclude: ["404", "404.html", "_astro"],
       excludeSelectors: ["aside", "form", "[data-llms-ignore]"],
+      trailingSlash: "always",
       verbose: false,
     }),
   ],
@@ -97,6 +98,7 @@ All configuration is defined in `astro.config.mjs` via `llms({...})`. The integr
 | `contentSelector`      | string  | `"main"`      | CSS selector for main content  |
 | `exclude`              | array   | see below     | File path patterns to exclude  |
 | `excludeSelectors`     | array   | `[]`          | CSS selectors to strip from content before HTML → MD conversion (see below) |
+| `trailingSlash`        | string  | inherits from Astro | `"always"`, `"never"`, or `"ignore"` — controls trailing slash on emitted page URLs (see below) |
 | `verbose`              | boolean | `false`       | Detailed output                |
 
 ### Default Excludes
@@ -166,6 +168,43 @@ llms({
 
 It is **not** applied by default — opt-in only, so upgrading to this
 release won't change existing markdown output unless you ask for it.
+
+### Trailing slash on emitted URLs
+
+`trailingSlash` controls whether canonical page URLs end with `/`. Accepts
+the same three values as Astro's [top-level `trailingSlash`](https://docs.astro.build/en/reference/configuration-reference/#trailingslash):
+
+| Value      | Behavior                                                            |
+| ---------- | ------------------------------------------------------------------- |
+| `"always"` | Append `/` to every emitted page URL                                |
+| `"never"`  | Strip trailing `/` from every emitted page URL                      |
+| `"ignore"` | Derive from `build.format` — `directory` → `"always"`, `file` → `"never"` |
+
+`"ignore"` follows Astro's [recommended pairings](https://docs.astro.build/en/reference/configuration-reference/#buildformat)
+(`directory + always`, `file + never`) so the emitted canonical lines up with
+the actual URL Astro serves for that build format.
+
+When not set, the integration inherits the value from your `astro.config`,
+including `build.format`. So a project on Astro defaults (`trailingSlash: "ignore"`
++ `build.format: "directory"`) gets canonicals ending in `/` automatically —
+matching what Astro serves on disk:
+
+```js
+// astro.config.mjs — Astro defaults
+export default defineConfig({
+  integrations: [llms()],  // emits https://site.com/about/
+});
+```
+
+To override explicitly, pass `trailingSlash` to `llms()`:
+
+```js
+llms({ trailingSlash: "never" });
+```
+
+This only affects page URLs (the `url:` field in individual `.md` files
+and the `URL:` line in `llms-full.txt`). The `.md` file links inside
+`llms.txt` are file URLs and never carry a trailing slash regardless.
 
 ## Output Files
 
