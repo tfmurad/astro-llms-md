@@ -1,0 +1,39 @@
+name: Auto-assign PR
+
+on:
+  pull_request_target:
+    types: [opened, reopened, ready_for_review]
+
+permissions:
+  pull-requests: write
+  issues: write
+
+jobs:
+  assign:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Assign maintainer
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const maintainer = "tfmurad";
+
+            if (pr.user.login === maintainer) {
+              core.info(`PR opened by ${maintainer} — skipping self-assignment.`);
+              return;
+            }
+
+            const current = (pr.assignees || []).map((u) => u.login);
+            if (current.includes(maintainer)) {
+              core.info(`${maintainer} already assigned.`);
+              return;
+            }
+
+            await github.rest.issues.addAssignees({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+              assignees: [maintainer],
+            });
+            core.info(`Assigned ${maintainer} to PR #${pr.number}.`);
