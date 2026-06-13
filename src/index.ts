@@ -438,10 +438,9 @@ export async function generateLlmsFiles(config: LlmsConfig): Promise<void> {
     }
 
     for (const page of pages) {
-      const mdPath = join(
-        resolvedOutputDir,
-        page.urlPath.replace(/^\//, "") + ".md",
-      );
+      const urlPathForFile =
+        page.urlPath === "/" ? "index" : page.urlPath.replace(/^\//, "");
+      const mdPath = join(resolvedOutputDir, urlPathForFile + ".md");
 
       const mdContent = generateMarkdownFile(page, formatterConfig);
 
