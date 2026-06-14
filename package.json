@@ -1,6 +1,6 @@
 {
   "name": "astro-llms-md",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "Generate llms.txt, llms-full.txt, and individual markdown files from your Astro site with this Astro integration",
   "type": "module",
   "main": "./dist/index.js",
