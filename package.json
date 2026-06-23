@@ -1,6 +1,6 @@
 {
   "name": "astro-llms-md",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "description": "Generate llms.txt, llms-full.txt, and individual markdown files from your Astro site with this Astro integration",
   "type": "module",
   "main": "./dist/index.js",
@@ -47,7 +47,7 @@
     "url": "https://github.com/tfmurad/astro-llms-md/issues"
   },
   "peerDependencies": {
-    "astro": "^4.0.0 || ^5.0.0 || ^6.0.0"
+    "astro": "^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0"
   },
   "dependencies": {
     "glob": "^13.0.6",
