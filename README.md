@@ -116,6 +116,10 @@ fetches SSR-only routes from `src/pages/`. If the configured site URL is not
 available, it temporarily starts `dist/server/entry.mjs` to render those pages
 locally.
 
+Dynamic routes (`[slug].astro`, `[slug]/`), status pages (`404`, `500`, …),
+`api/`, and anything matched by `exclude` or `include` are left out of that
+route list.
+
 ### Excluding noise from generated markdown
 
 By default, the integration converts everything inside your

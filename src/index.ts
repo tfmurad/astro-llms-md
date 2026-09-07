@@ -1,4 +1,5 @@
 import { glob } from "glob";
+import { minimatch } from "minimatch";
 import { parse } from "node-html-parser";
 import { spawn } from "node:child_process";
 import fs from "node:fs";
@@ -501,17 +502,58 @@ export function stopTempServer(
 // ─── SSR page discovery from source ──────────────────────────────────────────
 
 /**
+ * Matches a route against the same path patterns `exclude` and `include` use
+ * for static HTML, so the SSR route list honors them too. A route has no file
+ * yet, so it is matched by the names its HTML could take: `about`,
+ * `about.html`, `about/index.html`, and anything under `about/`.
+ */
+export function routeMatchesPattern(
+  routePath: string,
+  pattern: string,
+): boolean {
+  const relative = routePath.replace(/^\/+/, "");
+  const candidates = relative
+    ? [relative, `${relative}.html`, `${relative}/index.html`]
+    : ["index.html"];
+  const cleanPattern = pattern.replace(/^\/+/, "").replace(/\/+$/, "");
+
+  return candidates.some(
+    (candidate) =>
+      minimatch(candidate, cleanPattern) ||
+      minimatch(candidate, `${cleanPattern}/**`),
+  );
+}
+
+/**
  * Scans src/pages/ for static (non-dynamic) route files and returns their
- * URL paths. Dynamic routes ([slug].astro) and the api/ folder are excluded
- * since they either already have HTML files or are API-only.
+ * URL paths. Dynamic routes ([slug].astro, [slug]/), status pages (404, 500…)
+ * and the api/ folder are excluded since they either already have HTML files
+ * or are not pages. `excludePatterns` and `includePatterns` are the same
+ * patterns `discoverHtmlFiles` applies to static HTML.
  */
 export function discoverSsrPageRoutes(
   srcPagesDir: string,
   basePath: string,
+  excludePatterns?: string[],
+  includePatterns?: string[],
 ): string[] {
   if (!fs.existsSync(srcPagesDir)) return [];
 
   const routes: string[] = [];
+  const base = basePath === "/" ? "" : basePath.replace(/\/$/, "");
+  const excludes = [...DEFAULT_EXCLUDES, ...(excludePatterns || [])];
+  const includes = includePatterns || [];
+
+  function isWanted(relativeRoute: string): boolean {
+    if (
+      includes.length > 0 &&
+      !includes.some((p) => routeMatchesPattern(relativeRoute, p))
+    ) {
+      return false;
+    }
+
+    return !excludes.some((p) => routeMatchesPattern(relativeRoute, p));
+  }
 
   function scanDir(dir: string, urlPrefix: string) {
     const entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -519,8 +561,10 @@ export function discoverSsrPageRoutes(
     for (const entry of entries) {
       const name = entry.name;
 
-      // Skip hidden items and the api/ directory
-      if (name.startsWith(".") || name === "api") continue;
+      // Skip hidden items, dynamic segments, and the api/ directory
+      if (name.startsWith(".") || name.startsWith("[") || name === "api") {
+        continue;
+      }
 
       const fullPath = path.join(dir, name);
 
@@ -529,26 +573,27 @@ export function discoverSsrPageRoutes(
       } else if (
         entry.isFile() &&
         /\.(astro|md|mdx|ts|js)$/.test(name) &&
-        !name.startsWith("_") &&
-        !name.startsWith("[") // skip dynamic routes — they have per-entry HTML files
+        !name.startsWith("_")
       ) {
         const stem = name.replace(/\.(astro|md|mdx|ts|js)$/, "");
 
-        if (stem === "404") continue;
+        // Status pages (404, 500, …) render for errors, not at their own URL
+        if (/^\d{3}$/.test(stem)) continue;
 
-        const routePath =
+        const relativeRoute =
           stem === "index" ? urlPrefix || "/" : `${urlPrefix}/${stem}`;
-
-        const normalizedRoute = routePath || "/";
+        const normalizedRoute =
+          relativeRoute === "/" ? base || "/" : `${base}${relativeRoute}`;
 
         if (isApiRoute(normalizedRoute)) continue;
+        if (!isWanted(relativeRoute)) continue;
 
         routes.push(normalizedRoute);
       }
     }
   }
 
-  scanDir(srcPagesDir, basePath === "/" ? "" : basePath.replace(/\/$/, ""));
+  scanDir(srcPagesDir, "");
 
   return [...new Set(routes)].sort();
 }
@@ -758,7 +803,12 @@ export async function generateLlmsFiles(options: GenerateOptions): Promise<void>
   // ── Step 2: Fetch SSR-only pages ───────────────────────────────────────
   if (isSSR) {
     const srcPagesDir = path.join(path.dirname(distFolder), "src", "pages");
-    const ssrRoutes = discoverSsrPageRoutes(srcPagesDir, basePath);
+    const ssrRoutes = discoverSsrPageRoutes(
+      srcPagesDir,
+      basePath,
+      llms.exclude,
+      llms.include,
+    );
     const missingRoutes = ssrRoutes.filter((r) => !seenPaths.has(r));
 
     if (missingRoutes.length === 0) {

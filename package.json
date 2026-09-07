@@ -51,6 +51,7 @@
   },
   "dependencies": {
     "glob": "^13.0.6",
+    "minimatch": "^10.2.2",
     "node-html-parser": "^9.0.1",
     "turndown": "^7.2.4"
   },
