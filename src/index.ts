@@ -192,7 +192,12 @@ export async function discoverHtmlFiles(
     ...userExcludes,
   ];
 
-  let files = await glob(patterns, { ignore, absolute: true });
+  const toGlobPath = (pattern: string) =>
+    path.sep === "\\" ? pattern.replace(/\\/g, "/") : pattern;
+  let files = await glob(patterns.map(toGlobPath), {
+    ignore: ignore.map(toGlobPath),
+    absolute: true,
+  });
 
   files = files.filter((f) => fs.statSync(f).isFile() && f.endsWith(".html"));
 
