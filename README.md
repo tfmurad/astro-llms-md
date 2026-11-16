@@ -65,7 +65,7 @@ import llms from "astro-llms-md";
 export default defineConfig({
   site: "https://your-site.com",
   integrations: [
-    llms({
+    llmsIntegration({
       siteUrl: "https://your-site.com",
       name: "My Site",
       description: "A great website",
